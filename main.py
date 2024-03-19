@@ -12,7 +12,7 @@ import matplotlib as mpl
 from pandas.tseries.offsets import DateOffset
 from pandas.tseries.offsets import Minute
 
-file_path = r"C:\Users\GaelT\PycharmProjects\TRADING\Data\BTC-Daily.csv"
+file_path = r"C:\Users\GaelT\PycharmProjects\TRADING\Data\BTC-Hourly.csv"
 
 data = pd.read_csv(file_path)
 data['date'] = pd.to_datetime(data['date'])
@@ -25,7 +25,7 @@ close_prices = data['close']
 
 latent_dim = 100
 sequence_length = 50
-features = 6
+#features = 6
 epochs = 165
 batch_size = 128
 minutes_par_jour = 60
@@ -90,7 +90,6 @@ def train_gan(generator, discriminator, gan, data, epochs, batch_size):
 # PARTIE LSTM
 dataframe = pd.read_csv(r"C:\Users\GaelT\PycharmProjects\TRADING\Data\BTC-Daily.csv", index_col="date", parse_dates=True)
 
-# Sélection des colonnes pour l'entraînement et le test (6 features ici, ajustez les noms des colonnes selon votre fichier)
 features = dataframe[['open', 'high', 'low', 'close', 'Volume BTC', 'Volume USD']]
 scaler = MinMaxScaler()
 scaled_features = scaler.fit_transform(features)
@@ -99,8 +98,9 @@ split_index = int(len(scaled_features) * 0.8) #POURCENTAGE DE TAILLE D ENTRAINEM
 
 # Division en données d'entraînement et de test
 train_values = scaled_features[:split_index]
-test_values = scaled_features[split_index:]
 
+test_values = scaled_features[split_index:]
+print(test_values)
 def create_window(dataset, start_index, end_index, history_size):
     data = []
     labels = []
@@ -110,11 +110,11 @@ def create_window(dataset, start_index, end_index, history_size):
     for i in range(start_index, end_index):
         indices = range(i - history_size, i)
         data.append(dataset[indices])
-        labels.append(dataset[i][0])  # Ici, ajustez l'indice si une autre feature que la première doit être prédite
+        labels.append(dataset[i][0])
     return np.array(data), np.array(labels)
 
 # Création des fenêtres de données
-history_size = 5  # Ajustez la taille de l'historique selon vos besoins
+history_size = 7
 train_features, train_labels = create_window(train_values, 0, None, history_size)
 test_features, test_labels = create_window(test_values, 0, None, history_size)
 
@@ -124,12 +124,12 @@ model = tf.keras.models.Sequential([
 ])
 model.compile(optimizer='adam', loss='mean_squared_error')
 
-train_dataset = tf.data.Dataset.from_tensor_slices((train_features, train_labels)).batch(100).repeat()
-test_dataset = tf.data.Dataset.from_tensor_slices((test_features, test_labels)).batch(100).repeat()
+train_dataset = tf.data.Dataset.from_tensor_slices((train_features, train_labels)).batch(128).repeat()
+test_dataset = tf.data.Dataset.from_tensor_slices((test_features, test_labels)).batch(128).repeat()
 
 history = model.fit(
     train_dataset,
-    epochs=10,
+    epochs=165,
     steps_per_epoch=20,
     validation_data=test_dataset,
     validation_steps=3
@@ -148,12 +148,13 @@ def plot_history(history):
     plt.show()
 
 
-
 # Test sur les données d'entraînement (exemple)
 predictions = model.predict(train_features)
 temp_array = np.zeros((predictions.shape[0], 6))
 temp_array[:, 0] = predictions.ravel()
 real_predictions = scaler.inverse_transform(temp_array)[:, 0]
+
+print(real_predictions)
 
 plt.figure(figsize=(15,5))
 plt.plot(real_predictions[:300], 'r', label='Predictions')
@@ -161,33 +162,7 @@ plt.plot(scaler.inverse_transform(train_values[history_size:300+history_size])[:
 plt.legend()
 plt.show()
 
-# Initialisation de la séquence de départ avec les 5 derniers jours de test_values
-last_sequence = test_values[-history_size:].reshape(1, history_size, 6)
 
-# Liste pour stocker les prédictions
-predicted_sequence = []
-
-# Prédire les 5 prochains jours
-for _ in range(5):  # Pour chaque jour à prédire
-    # Faire une prédiction avec le modèle
-    day_prediction = model.predict(last_sequence)
-
-    # Ajouter la prédiction à la liste des prédictions
-    predicted_sequence.append(day_prediction[0, 0])
-
-    # Préparer la nouvelle séquence d'entrée avec la prédiction incluse
-    new_sequence = last_sequence[:, 1:, :]  # Supprimer le premier jour
-    new_day = np.zeros((1, 1, 6))  # Préparer un nouveau jour avec des zéros
-    new_day[0, 0, 0] = day_prediction  # Mettre la prédiction dans la feature souhaitée
-    last_sequence = np.concatenate((new_sequence, new_day), axis=1)  # Ajouter le nouveau jour à la séquence
-
-# Transformer les prédictions à leur échelle originale
-temp_array = np.zeros((len(predicted_sequence), 6))
-temp_array[:, 0] = np.array(predicted_sequence)
-real_predictions = scaler.inverse_transform(temp_array)[:, 0]
-
-# Affichage des prédictions
-print(real_predictions)
 
 ##PARTIE GAN
 #
