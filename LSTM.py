@@ -119,15 +119,15 @@ last_60_days = azn_adj_arr[-jour:]
 last_60_days_scaled = scaler.transform(last_60_days)
 
 future_predictions = []
-
-for i in range(15):
+jour_futur = 200
+for i in range(jour_futur):
     X_last_60 = np.reshape(last_60_days_scaled, (1, jour, 1))
     next_day_prediction_scaled = model.predict(X_last_60)
     future_predictions.append(scaler.inverse_transform(next_day_prediction_scaled))
     last_60_days_scaled = np.append(last_60_days_scaled, next_day_prediction_scaled)[1:].reshape(-1, 1)
 
 last_date = pd.to_datetime(end_date)
-future_dates = [last_date + pd.Timedelta(days=x+1) for x in range(15)]
+future_dates = [last_date + pd.Timedelta(days=x+1) for x in range(jour_futur)]
 
 future_predictions = np.array(future_predictions).reshape(-1, 1)
 future_predictions_df = pd.DataFrame(future_predictions, index=future_dates, columns=['Predictions'])
@@ -135,13 +135,10 @@ future_predictions_df = pd.DataFrame(future_predictions, index=future_dates, col
 
 fig = go.Figure()
 
-# Ajout de la série d'entraînement
 fig.add_trace(go.Scatter(x=train.index, y=train['Adj Close'], mode='lines', name='Training Data'))
 
-# Ajout de la série de test (valeurs réelles)
 fig.add_trace(go.Scatter(x=test.index, y=test['Adj Close'], mode='lines', name='Actual Values'))
 
-# Ajout de la série de prédictions sur les données de test
 fig.add_trace(go.Scatter(x=test.index, y=test['Predictions'], mode='lines', name='Predicted Values'))
 
 # Ajout des prédictions futures
