@@ -1,16 +1,35 @@
+import yfinance as yf
+
 import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
-import tensorflow as tf
-from keras.models import Sequential
-from keras.layers import Dense, GRU, Dropout, Flatten, LeakyReLU, LSTM, Input, Conv1D
-from keras.models import Model
-from keras.optimizers import Adam
 import numpy as np
-from datetime import timedelta
 import matplotlib.pyplot as plt
-import matplotlib as mpl
-from pandas.tseries.offsets import DateOffset
-from pandas.tseries.offsets import Minute
+import matplotlib.dates as dates
+import seaborn as sns
+import math
+import datetime
+import keras
+import warnings
+warnings.filterwarnings('ignore')
+
+from datetime import date, timedelta
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.layers import LSTM
+from keras.layers import Dropout
+from keras.layers import *
+from keras.callbacks import EarlyStopping
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_absolute_error
+
+
+azn_df = pd.read_csv(r"C:\Users\GaelT\PycharmProjects\TRADING\Data\BTC-Daily.csv", parse_dates=True)
+
+azn_df['close'].plot(grid = True)
+sns.set(rc={'figure.figsize':(16, 8)})
+plt.title('AZN.L Adjusted Close Price', color = 'black', fontsize = 20)
+plt.xlabel('Year', color = 'black', fontsize = 15)
+plt.ylabel('Stock price', color = 'black', fontsize = 15);
 
 file_path = r"C:\Users\GaelT\PycharmProjects\TRADING\Data\BTC-Hourly.csv"
 
