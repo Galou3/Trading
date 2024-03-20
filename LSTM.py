@@ -133,14 +133,24 @@ future_predictions = np.array(future_predictions).reshape(-1, 1)
 future_predictions_df = pd.DataFrame(future_predictions, index=future_dates, columns=['Predictions'])
 
 
-plt.figure(figsize=(20,10))
-sns.set_style("whitegrid")
-plt.plot(train['Adj Close'], label='Training')
-plt.plot(test['Adj Close'], label='Actual')
-plt.plot(test['Predictions'], label='Predicted')
-plt.plot(future_predictions_df, label='Futur')
-plt.title("BTC Close Price - LSTM", color = 'black', fontsize = 20)
-plt.xlabel('Year', color = 'black', fontsize = 15)
-plt.ylabel('Stock Price', color = 'black', fontsize = 15)
-plt.legend()
-plt.show()
+fig = go.Figure()
+
+# Ajout de la série d'entraînement
+fig.add_trace(go.Scatter(x=train.index, y=train['Adj Close'], mode='lines', name='Training Data'))
+
+# Ajout de la série de test (valeurs réelles)
+fig.add_trace(go.Scatter(x=test.index, y=test['Adj Close'], mode='lines', name='Actual Values'))
+
+# Ajout de la série de prédictions sur les données de test
+fig.add_trace(go.Scatter(x=test.index, y=test['Predictions'], mode='lines', name='Predicted Values'))
+
+# Ajout des prédictions futures
+fig.add_trace(go.Scatter(x=future_predictions_df.index, y=future_predictions_df['Predictions'], mode='lines', name='Future Predictions'))
+
+
+fig.update_layout(title='BTC Close Price Prediction with LSTM',
+                  xaxis_title='Date',
+                  yaxis_title='Price in USD',
+                  template='plotly_dark')
+
+fig.show()
