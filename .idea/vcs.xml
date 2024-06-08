@@ -2,5 +2,7 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Parti_GAN/Stock-price-prediction-using-GAN" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/sentiment-analysis-crypto" vcs="Git" />
   </component>
 </project>
